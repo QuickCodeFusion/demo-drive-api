@@ -7,7 +7,7 @@ const auth = new google.auth.JWT(
   'CREDENTIALS_FILE', //   credentials.client_email,
   undefined,
   'CREDENTIALS_FILE', //   credentials.private_key,
-  SCOPES
+  SCOPES,
 );
 
 const drive = google.drive({ version: 'v3', auth });
