@@ -14,4 +14,4 @@ export interface JWTInput {
     quota_project_id?: string;
 }
 
-export type TJSONClient = JSONClient | OAuth2Client;
+export type TJSONClient = OAuth2Client;

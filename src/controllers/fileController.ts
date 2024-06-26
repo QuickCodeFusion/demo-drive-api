@@ -1,21 +1,22 @@
 /* eslint-disable max-len */
 import { Request, Response } from 'express';
-import googleDriveService from './googleDriveService';
+import googleDriveService from '../services/googleDriveService';
 
 class FileController {
   public async uploadFile(req: Request, res: Response) {
     try {
-      const { name, mimeType }: { name: string; mimeType: string } = req.body as { name: string; mimeType: string };
-      const file = req.files?.file;
-
+      const { file } = req;
+      
       if (!file) {
         return res.status(400).send('No file uploaded');
       }
-
-      const result = await googleDriveService.uploadFile(name, mimeType, file.data);
+      const { originalname, mimetype, buffer } = file;
+        
+      const result = await googleDriveService.uploadFile(originalname, mimetype, buffer);
       res.status(201).json(result);
     } catch (error: unknown) {
       if(error instanceof Error) {
+        console.error(error);
         res.status(500).send(error.message);
       }
     }
@@ -36,16 +37,16 @@ class FileController {
   public async updateFile(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { mimeType } = req.body;
-      const file = req.files?.file;
+      const { mimetype } = req.body as { mimetype: string };
+      const { file } = req;
 
       if (!file) {
         return res.status(400).send('No file uploaded');
       }
 
-      const result = await googleDriveService.updateFile(id, mimeType, file.data);
+      const result = await googleDriveService.updateFile(id, mimetype, file.buffer);
       res.status(200).json(result);
-    } catch (error) {
+    } catch (error: unknown) {
       if(error instanceof Error) {
         res.status(500).send(error.message);
       }

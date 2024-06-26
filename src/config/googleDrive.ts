@@ -1,74 +1,66 @@
-import fs from 'fs-extra';
+/* eslint-disable node/no-extraneous-import */
+/* eslint-disable max-len */
+import { google, drive_v3 } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
+import { Credentials} from 'google-auth-library/build/src/auth/credentials';
+import fs from 'fs';
 import path from 'path';
-import { authenticate } from '@google-cloud/local-auth';
-import { google } from 'googleapis';
-import { JWTInput, TJSONClient } from './types';
+import readline from 'readline';
 
-// If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
-const TOKEN_PATH = path.join(process.cwd(), 'token.json');
-const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
-
-/**
- * Reads previously authorized credentials from the save file.
- *
- * @return {Promise<OAuth2Client|null>}
- */
-async function loadSavedCredentialsIfExist(): Promise<TJSONClient | null> {
-  try {
-    const content = await fs.readFile(TOKEN_PATH);
-    const credentials = JSON.parse(content.toString()) as JWTInput;
-    const client = google.auth.fromJSON(credentials);
-    return client;
-  } catch (err) {
-    return null;
-  }
-}
-
-/**
- * Serializes credentials to a file compatible with GoogleAuth.fromJSON.
- *
- * @param {OAuth2Client} client
- * @return {Promise<void>}
- */
-async function saveCredentials(client: TJSONClient | null): Promise<void> {
-  const content = await fs.readFile(CREDENTIALS_PATH);
-  const keys = JSON.parse(content.toString()) as {
-    installed?: JWTInput;
-    web?: JWTInput;
+interface ICredentials {
+  installed: {
+    client_id: string;
+    project_id: string;
+    auth_uri: string;
+    token_uri: string;
+    auth_provider_x509_cert_url: string;
+    client_secret: string;
+    redirect_uris: string[];
   };
-  const key = keys.installed || keys.web;
-  const payload = JSON.stringify({
-    type: 'authorized_user',
-    client_id: key?.client_id,
-    client_secret: key?.client_secret,
-    refresh_token: client?.credentials.refresh_token,
-  });
-  await fs.writeFile(TOKEN_PATH, payload);
 }
 
-/**
- * Load or request or authorization to call APIs.
- *
- */
-async function authorize() {
-  let client = await loadSavedCredentialsIfExist();
-  if (client) {
-    return client;
-  }
-  client = await authenticate({
-    scopes: SCOPES,
-    keyfilePath: CREDENTIALS_PATH,
+const SCOPES = ['https://www.googleapis.com/auth/drive'];
+const TOKEN_PATH = path.join(__dirname, '../../token.json');
+const CREDENTIALS_PATH = path.join(__dirname, '../../credentials.json');
+
+const credentials: ICredentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf-8')) as ICredentials;
+const { client_secret, client_id, redirect_uris } = credentials.installed;
+
+const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+
+// Load token from file, or get new token
+fs.readFile(TOKEN_PATH, (err, token) => {
+  if (err) return getNewToken(oAuth2Client);
+  oAuth2Client.setCredentials(JSON.parse(token.toString()) as Credentials);
+});
+
+function getNewToken(oAuth2Client: OAuth2Client) {
+  const authUrl = oAuth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: SCOPES,
   });
-  if (client.credentials) {
-    await saveCredentials(client);
-  }
-  return client;
+  console.log('Authorize this app by visiting this url:', authUrl);
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  rl.question('Enter the code from that page here: ', (code) => {
+    rl.close();
+    oAuth2Client.getToken(code, (err, token) => {
+      if (err) {
+        console.error('Error retrieving access token', err);
+        return;
+      }
+      oAuth2Client.setCredentials(token!);
+      // Store the token to disk for later program executions
+      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+        if (err) return console.error(err);
+        console.log('Token stored to', TOKEN_PATH);
+      });
+    });
+  });
 }
 
-const drive = await authorize();
+const drive: drive_v3.Drive = google.drive({ version: 'v3', auth: oAuth2Client });
 
 export default drive;

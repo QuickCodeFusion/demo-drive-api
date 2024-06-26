@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import drive from '../config/googleDrive';
 
 class GoogleDriveService {
@@ -9,7 +10,7 @@ class GoogleDriveService {
       },
       media: {
         mimeType,
-        body,
+        body: Readable.from(body),
       },
     });
     return response.data;
