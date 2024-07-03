@@ -19,5 +19,12 @@ router.put(Paths.Files.Update,
 router.delete(Paths.Files.Delete,
   (req, res) => fileController.deleteFile(req, res));
 
+router.get(Paths.Files.Folder,
+  (req, res) => fileController.listFilesInFolder(req, res));
 
+router.get('/folder/:parentId/folders',
+  (req, res) => fileController.listFoldersInLocation(req, res));
+
+router.get('/folderByName/:name',
+  (req, res) => fileController.getFolderIdByName(req, res));
 export default router;

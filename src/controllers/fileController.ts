@@ -34,6 +34,18 @@ class FileController {
     }
   }
 
+  public async listFilesInFolder(req: Request, res: Response) {
+    try {
+      const { name } = req.params;
+      const files = await googleDriveService.listFilesInFolder(name);
+      res.status(200).json(files);
+    } catch (error: unknown) {
+      if(error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
   public async updateFile(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -60,6 +72,30 @@ class FileController {
       res.status(204).send();
     } catch (error: unknown) {
       if(error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+  
+  public async listFoldersInLocation(req: Request, res: Response) {
+    try {
+      const { parentId } = req.params;
+      const folders = await googleDriveService.listFoldersInLocation(parentId);
+      res.status(200).json(folders);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
+  public async getFolderIdByName(req: Request, res: Response) {
+    try {
+      const { name } = req.params;
+      const folderId = await googleDriveService.getFolderIdByName(name);
+      res.status(200).json({ folderId });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
         res.status(500).send(error.message);
       }
     }
