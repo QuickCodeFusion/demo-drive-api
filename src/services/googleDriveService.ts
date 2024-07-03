@@ -1,9 +1,12 @@
+/* eslint-disable node/no-unsupported-features/node-builtins */
+/* eslint-disable max-len */
 import { Readable } from 'stream';
-import drive from '../config/googleDrive';
+import { drive } from '../config/googleDrive';
 
 class GoogleDriveService {
   public async uploadFile(name: string, mimeType: string, body: Buffer) {
-    const response = await drive.files.create({
+    const driveClient = await drive;
+    const response = await driveClient.files.create({
       requestBody: {
         name,
         mimeType,
@@ -17,7 +20,8 @@ class GoogleDriveService {
   }
 
   public async getFile(fileId: string) {
-    const response = await drive.files.get({
+    const driveClient = await drive;
+    const response = await driveClient.files.get({
       fileId,
       alt: 'media',
     }, {
@@ -26,9 +30,32 @@ class GoogleDriveService {
 
     return response.data;
   }
+  
+  public async listFilesInFolder(folderId: string) {
+    const driveInstance = await drive;
+    const res = await driveInstance.files.list({
+      q: `'${folderId}' in parents`,
+      fields: 'nextPageToken, files(id, name)',
+    });
+    return res.data.files;
+  }
+
+  public async getFolderIdByName(folderName: string) {
+    const driveInstance = await drive;
+    const res = await driveInstance.files.list({
+      q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}'`,
+      fields: 'files(id, name)',
+    });
+    const folders = res.data.files;
+    if (!folders || folders.length === 0) {
+      throw new Error(`Folder with name '${folderName}' not found.`);
+    }
+    return folders[0].id;
+  }
 
   public async updateFile(fileId: string, mimeType: string, body: Buffer) {
-    const response = await drive.files.update({
+    const driveClient = await drive;
+    const response = await driveClient.files.update({
       fileId,
       media: {
         mimeType,
@@ -39,7 +66,17 @@ class GoogleDriveService {
   }
 
   public async deleteFile(fileId: string) {
-    await drive.files.delete({ fileId });
+    const driveClient = await drive;
+    await driveClient.files.delete({ fileId });
+  }
+
+  public async listFoldersInLocation(parentId: string) {
+    const driveInstance = await drive;
+    const res = await driveInstance.files.list({
+      q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder'`,
+      fields: 'nextPageToken, files(id, name)',
+    });
+    return res.data.files;
   }
 }
 
