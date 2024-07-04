@@ -3,3 +3,4 @@ dist/
 **/**/*.log
 credentials.json
 token.json
+.vercel
