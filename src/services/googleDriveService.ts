@@ -40,7 +40,7 @@ class GoogleDriveService {
     return {
       name: fileName,
       mimeType: mimeType,
-      stream: response.data as Readable
+      stream: response.data,
     };
   }
   
@@ -50,7 +50,7 @@ class GoogleDriveService {
       q: `'${folderId}' in parents`,
       fields: 'nextPageToken, files(id, name, mimeType, kind)',
     });
-    console.log(res)
+    console.log(res);
     return res.data.files;
   }
 
@@ -99,7 +99,7 @@ class GoogleDriveService {
       fileId: docId,
       mimeType,
     },{
-      responseType: 'stream'
+      responseType: 'stream',
     });
     return res.data;
   }

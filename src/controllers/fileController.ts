@@ -74,7 +74,7 @@ class FileController {
     try {
       const { id } = req.params;
       await googleDriveService.deleteFile(id);
-      res.status(204).send();
+      res.status(204).send('Successfully deleted file ' + id);
     } catch (error: unknown) {
       if(error instanceof Error) {
         res.status(500).send(error.message);
@@ -110,11 +110,11 @@ class FileController {
     try {
       const { id } = req.params;
       const { mimeType } = req.query;
-      if (typeof mimeType !== 'string' || typeof mimeType !== undefined) {
-        throw Error('Invalid query mimeType. Has to be string or undefined')
+      if (typeof mimeType !== 'string' || typeof mimeType !== 'undefined') {
+        throw Error('Invalid query mimeType. Has to be string or undefined');
       }
       const exportedFile = await googleDriveService.exportDocFile(id, mimeType as string | undefined);
-      exportedFile.pipe(res)
+      exportedFile.pipe(res);
     } catch (error: unknown) {
       if (error instanceof Error) {
         res.status(500).send(error.message);
