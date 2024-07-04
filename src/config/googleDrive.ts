@@ -3,6 +3,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as process from 'process';
+import { authenticate } from '@google-cloud/local-auth';
 import { google, drive_v3, Auth } from 'googleapis';
 
 const SCOPES = [
@@ -57,7 +58,7 @@ async function saveCredentials(client: Auth.OAuth2Client): Promise<void> {
 }
 
 /**
- * Load or request authorization to call APIs.
+ * Load or request or authorization to call APIs.
  *
  * @return {Promise<Auth.OAuth2Client>}
  */
@@ -66,37 +67,13 @@ async function authorize(): Promise<Auth.OAuth2Client> {
   if (client) {
     return client;
   }
-  const content = await fs.readFile(CREDENTIALS_PATH, 'utf-8');
-  const keys = JSON.parse(content) as {
-    installed?: { client_id: string; client_secret: string; redirect_uris: string[] };
-    web?: { client_id: string; client_secret: string; redirect_uris: string[] };
-  };
-  const key = keys.installed || keys.web;
-  if (!key) {
-    throw new Error('Invalid client secret.');
+  client = await authenticate({
+    scopes: SCOPES,
+    keyfilePath: CREDENTIALS_PATH,
+  });
+  if (client.credentials) {
+    await saveCredentials(client);
   }
-  const { client_id, client_secret, redirect_uris } = key;
-  client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-
-  const authUrl = client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-  });
-  
-  console.log('Authorize this app by visiting this url:', authUrl);
-
-  const code = await new Promise<string>((resolve) => {
-    console.log('Enter the code from that page here:');
-    process.stdin.resume();
-    process.stdin.on('data', (data) => {
-      process.stdin.pause();
-      resolve(data.toString().trim());
-    });
-  });
-
-  const tokenResponse = await client.getToken(code);
-  client.setCredentials(tokenResponse.tokens);
-  await saveCredentials(client);
   return client;
 }
 
