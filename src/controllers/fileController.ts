@@ -110,7 +110,10 @@ class FileController {
     try {
       const { id } = req.params;
       const { mimeType } = req.query;
-      const exportedFile = await googleDriveService.exportDocFile(id, mimeType);
+      if (typeof mimeType !== 'string' || typeof mimeType !== undefined) {
+        throw Error('Invalid query mimeType. Has to be string or undefined')
+      }
+      const exportedFile = await googleDriveService.exportDocFile(id, mimeType as string | undefined);
       exportedFile.pipe(res)
     } catch (error: unknown) {
       if (error instanceof Error) {
