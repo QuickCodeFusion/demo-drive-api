@@ -27,4 +27,7 @@ router.get('/folder/:parentId/folders',
 
 router.get('/folderByName/:name',
   (req, res) => fileController.getFolderIdByName(req, res));
+
+router.get('/export/:id',
+  (req, res) => fileController.exportFileById(req, res));
 export default router;

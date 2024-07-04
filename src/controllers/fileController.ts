@@ -25,8 +25,13 @@ class FileController {
   public async getFile(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const fileStream = await googleDriveService.getFile(id);
-      fileStream.pipe(res);
+      const fileData = await googleDriveService.getFile(id);
+      // Set the headers for file download
+      res.setHeader('Content-Type', fileData.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${fileData.name}"`);
+
+      // Stream the file to the client
+      fileData.stream.pipe(res);
     } catch (error: unknown) {
       if(error instanceof Error) {
         res.status(500).send(error.message);
@@ -94,6 +99,19 @@ class FileController {
       const { name } = req.params;
       const folderId = await googleDriveService.getFolderIdByName(name);
       res.status(200).json({ folderId });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
+  public async exportFileById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { mimeType } = req.query;
+      const exportedFile = await googleDriveService.exportDocFile(id, mimeType);
+      exportedFile.pipe(res)
     } catch (error: unknown) {
       if (error instanceof Error) {
         res.status(500).send(error.message);

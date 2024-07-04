@@ -21,6 +21,12 @@ class GoogleDriveService {
 
   public async getFile(fileId: string) {
     const driveClient = await drive;
+
+    const fileMetadata = await driveClient.files.get({
+      fileId,
+      fields: 'name, mimeType',
+    });
+
     const response = await driveClient.files.get({
       fileId,
       alt: 'media',
@@ -28,15 +34,23 @@ class GoogleDriveService {
       responseType: 'stream',
     });
 
-    return response.data;
+    const fileName = fileMetadata.data.name || 'downloaded_file';
+    const mimeType = fileMetadata.data.mimeType || 'application/octet-stream';
+    
+    return {
+      name: fileName,
+      mimeType: mimeType,
+      stream: response.data as Readable
+    };
   }
   
   public async listFilesInFolder(folderId: string) {
     const driveInstance = await drive;
     const res = await driveInstance.files.list({
       q: `'${folderId}' in parents`,
-      fields: 'nextPageToken, files(id, name)',
+      fields: 'nextPageToken, files(id, name, mimeType, kind)',
     });
+    console.log(res)
     return res.data.files;
   }
 
@@ -74,9 +88,20 @@ class GoogleDriveService {
     const driveInstance = await drive;
     const res = await driveInstance.files.list({
       q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder'`,
-      fields: 'nextPageToken, files(id, name)',
+      fields: 'nextPageToken, files(id, name, mimeType, kind)',
     });
     return res.data.files;
+  }
+
+  public async exportDocFile(docId:string, mimeType:string = 'application/pdf') {
+    const driveInstance = await drive;
+    const res = await driveInstance.files.export({
+      fileId: docId,
+      mimeType,
+    },{
+      responseType: 'stream'
+    });
+    return res.data;
   }
 }
 
