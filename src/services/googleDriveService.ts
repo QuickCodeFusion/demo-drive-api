@@ -47,11 +47,19 @@ class GoogleDriveService {
   public async listFilesInFolder(folderId: string) {
     const driveInstance = await drive;
     const res = await driveInstance.files.list({
-      q: `'${folderId}' in parents`,
+      q: `sharedWithMe and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType, kind)',
     });
     console.log(res);
-    return res.data.files;
+    const filesInMyDrive = await driveInstance.files.list({
+      q: `'${folderId}' in parents and trashed = false`,
+      fields: 'nextPageToken, files(id, name, mimeType, kind)',
+    })
+    if (folderId === 'root') {
+      const allFiles = [...(res?.data?.files || []), ...(filesInMyDrive.data.files || [])];
+      return allFiles;
+    }
+    return filesInMyDrive.data.files;
   }
 
   public async getFolderIdByName(folderName: string) {
@@ -85,23 +93,39 @@ class GoogleDriveService {
   }
 
   public async listFoldersInLocation(parentId: string) {
-    const driveInstance = await drive;
-    const res = await driveInstance.files.list({
-      q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder'`,
-      fields: 'nextPageToken, files(id, name, mimeType, kind)',
+    const driveClient = await drive;
+    // Search for owned folders in the specified location
+    const resOwned = await driveClient.files.list({
+      q: `'${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: 'files(id, name)',
     });
-    return res.data.files;
-  }
 
-  public async exportDocFile(docId:string, mimeType:string = 'application/pdf') {
+    // Search for shared folders in the specified location
+    const resShared = await driveClient.files.list({
+      q: `'${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and sharedWithMe and trashed = false`,
+      fields: 'files(id, name)',
+    });
+
+    // Combine owned and shared folders
+    const folders = [...(resOwned.data.files || []), ...(resShared.data.files || [])];
+    return folders;
+  };
+  public async exportDocFile(docId:string, exportMimeType:string = 'application/pdf') {
     const driveInstance = await drive;
+    const docMetadata = await driveInstance.files.get({ fileId: docId, fields: 'name, mimeType' });
+    const fileName = docMetadata.data.name || 'downloaded_file';
+    const mimeType = docMetadata.data.mimeType || 'application/octet-stream';
     const res = await driveInstance.files.export({
       fileId: docId,
-      mimeType,
+      mimeType: exportMimeType,
     },{
       responseType: 'stream',
     });
-    return res.data;
+    return {
+      name: fileName,
+      mimeType,
+      stream: res.data,
+    }
   }
 }
 

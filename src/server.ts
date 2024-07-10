@@ -2,7 +2,7 @@
  * Setup express server.
  */
 
-import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import express, { Request, Response, NextFunction } from 'express';
@@ -10,14 +10,14 @@ import logger from 'jet-logger';
 
 import 'express-async-errors';
 
-import BaseRouter from '@src/routes/api';
-import Paths from '@src/constants/Paths';
+import BaseRouter from '../src/routes/api';
+import Paths from '../src/constants/Paths';
 
-import EnvVars from '@src/constants/EnvVars';
-import HttpStatusCodes from '@src/constants/HttpStatusCodes';
+import EnvVars from '../src/constants/EnvVars';
+import HttpStatusCodes from '../src/constants/HttpStatusCodes';
 
-import { NodeEnvs } from '@src/constants/misc';
-import { RouteError } from '@src/other/classes';
+import { NodeEnvs } from '../src/constants/misc';
+import { RouteError } from '../src/other/classes';
 
 
 // **** Variables **** //
@@ -30,7 +30,7 @@ const app = express();
 // Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-app.use(cookieParser(EnvVars.CookieProps.Secret));
+app.use(cors());
 
 // Show routes called in console during development
 if (EnvVars.NodeEnv === NodeEnvs.Dev.valueOf()) {

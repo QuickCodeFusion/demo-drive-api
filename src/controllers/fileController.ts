@@ -110,11 +110,16 @@ class FileController {
     try {
       const { id } = req.params;
       const { mimeType } = req.query;
-      if (typeof mimeType !== 'string' || typeof mimeType !== 'undefined') {
-        throw Error('Invalid query mimeType. Has to be string or undefined');
+      if (typeof mimeType !== 'string') {
+        throw Error('Invalid query mimeType. Has to be string');
       }
-      const exportedFile = await googleDriveService.exportDocFile(id, mimeType as string | undefined);
-      exportedFile.pipe(res);
+      const fileData = await googleDriveService.exportDocFile(id, mimeType as string | undefined);
+      const encodedFilename = encodeURIComponent(fileData.name).replace(/['()]/g, escape).replace(/\*/g, '%2A');
+      // Set the headers for file download
+      res.setHeader('Content-Type', fileData.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${encodedFilename}"`);
+
+      fileData.stream.pipe(res);
     } catch (error: unknown) {
       if (error instanceof Error) {
         res.status(500).send(error.message);

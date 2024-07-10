@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import fileController from '../controllers/fileController';
 import upload from '../config/multerConfig';
-import Paths from '@src/constants/Paths';
+import Paths from '../constants/Paths';
 
 const router = Router();
 
