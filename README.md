@@ -5,7 +5,7 @@ This project was created with [express-generator-typescript](https://github.com/
 # API Documentation
 
 ### Upload File
-- URL: /upload
+- URL: /api/files/add
 - Method: POST
 - Description: Uploads a file to Google Drive.
 - Request Headers: Content-Type: multipart/form-data
@@ -22,7 +22,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### Get File
-- URL: /file/:id
+- URL: /api/files/:id
 - Method: GET
 - Description: Retrieves a file from Google Drive by its ID.
 - URL Parameters:
@@ -36,7 +36,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### Update File
-- URL: /file/:id
+- URL: /api/files/:id
 - Method: PUT
 - Description: Updates an existing file in Google Drive by its ID.
 - Request Headers: Content-Type: multipart/form-data
@@ -56,7 +56,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### Delete File
-- URL: /file/:id
+- URL: /api/files/delete/:id
 - Method: DELETE
 - Description: Deletes a file from Google Drive by its ID.
 - URL Parameters:
@@ -70,7 +70,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### List Files in Folder
-- URL: /folder/:id/files
+- URL: /api/files/folder/:id/files
 - Method: GET
 - Description: Lists all files within a specific folder by folder ID.
 - URL Parameters:
@@ -84,7 +84,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### List Folders in Location
-- URL: /folder/:parentId/folders
+- URL: /api/files/folder/:parentId/folders
 - Method: GET
 - Description: Lists all folders within a specific parent folder by parent folder ID.
 - URL Parameters:
@@ -98,7 +98,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### Get Folder ID by Name
-- URL: /folderByName/:name
+- URL: /api/files/folderByName/:name
 - Method: GET
 - Description: Retrieves the ID of a folder by its name.
 - URL Parameters:
@@ -112,7 +112,7 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ### Export File by ID
-- URL: /export/:id
+- URL: /api/files/export/:id
 - Method: GET
 - Description: Exports a Google Docs file as a specified MIME type.
 - URL Parameters:
@@ -129,14 +129,14 @@ This project was created with [express-generator-typescript](https://github.com/
     ```
 
 ## Summary of Routes
-- Upload File: POST /upload
-- Get File: GET /file/:id
-- Update File: PUT /file/:id
-- Delete File: DELETE /file/:id
-- List Files in Folder: GET /folder/:id/files
-- List Folders in Location: GET /folder/:parentId/folders
-- Get Folder ID by Name: GET /folderByName/:name
-- Export File by ID: GET /export/:id
+- Upload File: POST /api/files/upload
+- Get File: GET /api/files/:id
+- Update File: PUT /api/files/:id
+- Delete File: DELETE /api/files/:id
+- List Files in Folder: GET /api/files/folder/:id/files
+- List Folders in Location: GET /api/files/folder/:parentId/folders
+- Get Folder ID by Name: GET /api/files/folderByName/:name
+- Export File by ID: GET /api/files/export/:id
 
 ## Available Scripts
 
