@@ -5,7 +5,7 @@ This project was created with [express-generator-typescript](https://github.com/
 # API Documentation
 
 ### Upload File
-- URL: /api/files/upload
+- URL: /api/files/add
 - Method: POST
 - Description: Uploads a file to Google Drive.
 - Request Headers: Content-Type: multipart/form-data
