@@ -46,17 +46,17 @@ class GoogleDriveService {
   
   public async listFilesInFolder(folderId: string) {
     const driveInstance = await drive;
-    const res = await driveInstance.files.list({
+    const sharedFiles = await driveInstance.files.list({
       q: `sharedWithMe and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType, kind)',
     });
-    console.log(res);
+    console.log(sharedFiles);
     const filesInMyDrive = await driveInstance.files.list({
       q: `'${folderId}' in parents and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType, kind)',
     })
     if (folderId === 'root') {
-      const allFiles = [...(res?.data?.files || []), ...(filesInMyDrive.data.files || [])];
+      const allFiles = [...(sharedFiles?.data?.files || []), ...(filesInMyDrive.data.files || [])];
       return allFiles;
     }
     return filesInMyDrive.data.files;
@@ -102,13 +102,16 @@ class GoogleDriveService {
 
     // Search for shared folders in the specified location
     const resShared = await driveClient.files.list({
-      q: `'${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and sharedWithMe and trashed = false`,
+      q: `mimeType = 'application/vnd.google-apps.folder' and sharedWithMe and trashed = false`,
       fields: 'files(id, name)',
     });
 
+    if (parentId === 'root') {
     // Combine owned and shared folders
-    const folders = [...(resOwned.data.files || []), ...(resShared.data.files || [])];
-    return folders;
+    const allFolders = [...(resOwned.data.files || []), ...(resShared.data.files || [])];
+    return allFolders;
+    }
+    return resOwned.data.files;
   };
   public async exportDocFile(docId:string, exportMimeType:string = 'application/pdf') {
     const driveInstance = await drive;
